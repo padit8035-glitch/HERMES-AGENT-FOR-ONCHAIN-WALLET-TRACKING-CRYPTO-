@@ -1,0 +1,19 @@
+{
+  "_comment": "Copy this to wallets.json and fill in your own addresses. NEVER commit wallets.json to git.",
+  "rpc": "https://rpc.mainnet.chain.robinhood.com",
+  "chain": "robinhood",
+  "wallets": {
+    "bev_T1": {
+      "address": "0xYOUR_WALLET_1_HERE",
+      "track_trades": true
+    },
+    "bev_T2": {
+      "address": "0xYOUR_WALLET_2_HERE",
+      "track_trades": true
+    },
+    "funder_a": {
+      "address": "0xYOUR_FUNDING_WALLET_HERE",
+      "track_trades": false
+    }
+  }
+}

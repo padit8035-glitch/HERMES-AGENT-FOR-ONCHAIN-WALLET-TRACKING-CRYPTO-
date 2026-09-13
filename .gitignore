@@ -1,0 +1,31 @@
+# Secrets & wallet data — NEVER commit
+wallets.json
+*.pid
+
+# Runtime state & cache
+*_state.json
+*_state.jsonl
+*_queue.jsonl
+*_cache.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.egg-info/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temp
+/tmp/
+.cache/
