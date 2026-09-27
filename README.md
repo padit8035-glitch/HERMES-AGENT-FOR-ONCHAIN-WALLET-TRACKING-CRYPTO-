@@ -1,47 +1,57 @@
 # Wallet Tracker
 
-Multi-wallet monitoring toolkit for EVM chains. Polls trades and ERC20 transfers via RPC + GMGN CLI, formats alerts for Telegram delivery.
+Multi-wallet on-chain monitoring toolkit for EVM chains. Polls token trades and ERC20 transfers over JSON-RPC plus GMGN CLI, formats alerts, and hands them to a delivery script for Telegram. Built to track a cluster of wallets and react to activity within a poll cycle.
+
+**Read-only.** No keys, no signing, no transaction submission.
 
 ## Components
 
 | Script | Role |
-|--------|------|
-| `config.py` | Loads `wallets.json` (wallet addresses, RPC, chain) |
-| `bevan_daemon.py` | Long-running daemon: polls every 20s, queues alerts to disk |
-| `bevan_deliver.py` | Reads alert queue, outputs for cron delivery |
+| --- | --- |
+| `config.py` | Loads `wallets.json` (addresses, RPC endpoint, chain) |
+| `bevan_daemon.py` | Long-running daemon: polls on an interval, queues alerts to disk |
+| `bevan_deliver.py` | Reads the alert queue and emits output for cron delivery |
 | `bevan_alerts.py` | One-shot alert runner (cron-friendly) |
-| `monitor_wallet.py` | Monitor a single wallet's token activity |
-| `multi_wallet_watcher.py` | Real-time multi-wallet watcher with instant Telegram alerts |
+| `monitor_wallet.py` | Single-wallet token activity monitor |
+| `multi_wallet_watcher.py` | Multi-wallet watcher with instant Telegram alerts |
 | `trace_wallet.sh` | One-shot wallet portfolio trace via GMGN |
-| `sm-watch-monitor.sh` | Smart money watchlist cron wrapper |
+| `sm-watch-monitor.sh` | Smart-money watchlist cron wrapper |
+| `wallets.example.json` | Config template — copy, do not commit the real one |
+
+The daemon/deliver split exists so polling and delivery are independently restartable: if Telegram is down, alerts stay queued on disk and drain on the next successful run instead of being lost.
 
 ## Setup
 
 ```bash
-# 1. Copy example config
-cp wallets.example.json wallets.json
+cp wallets.example.json wallets.json   # then add your addresses
+npm install -g gmgn-cli                 # trade data source
 
-# 2. Edit wallets.json — add your wallet addresses
-#    NEVER commit wallets.json to git
+python3 bevan_alerts.py                # one-shot, good for a first check
+python3 bevan_daemon.py                # long-running
+```
 
-# 3. Install gmgn-cli (for trade data)
-npm install -g gmgn-cli
+## Deploy
 
-# 4. Run
-python3 bevan_daemon.py          # long-running daemon
-python3 bevan_alerts.py          # one-shot (cron)
-python3 multi_wallet_watcher.py  # real-time watcher
+Run the daemon under systemd and the deliver script from cron, or both from cron if you prefer one moving part.
+
+```cron
+* * * * * cd /opt/wallet-tracker && python3 bevan_alerts.py | /opt/wallet-tracker/send.sh
 ```
 
 ## Requirements
 
-- Python 3.10+
-- `gmgn-cli` (npm package)
-- Public RPC endpoint (no API key needed for Robinhood Chain)
+- Python 3.10+ (standard library only — no third-party Python packages)
+- `gmgn-cli` (npm) for trade data
+- A public RPC endpoint
 
-## ⚠️ Security
+## Security
 
-- `wallets.json` is in `.gitignore` — never commit it
-- No hardcoded wallet addresses in source code
-- All wallet data comes from your local config file
-- State/cache files are also gitignored
+- `wallets.json`, state, queue, and cache files are git-ignored — never commit them
+- No wallet addresses or RPC keys are hardcoded in source
+- The toolkit only reads chain data
+
+## Notes
+
+- Config values in `wallets.example.json` are placeholders.
+
+MIT licensed.
